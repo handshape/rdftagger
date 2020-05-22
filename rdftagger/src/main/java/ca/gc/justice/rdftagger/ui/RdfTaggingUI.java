@@ -29,7 +29,7 @@ public class RdfTaggingUI extends Application {
         Scene scene = new Scene(root);
         primaryStage.setTitle("Justice RDF Tagger");
         primaryStage.getIcons().clear();
-        primaryStage.getIcons().add(new Image(getClass().getResource("brain.png").toExternalForm()));
+        primaryStage.getIcons().add(new Image(getClass().getResource("triple.png").toExternalForm()));
         primaryStage.setScene(scene);
         primaryStage.show();
         RdfTaggingUIController controller = loader.getController();

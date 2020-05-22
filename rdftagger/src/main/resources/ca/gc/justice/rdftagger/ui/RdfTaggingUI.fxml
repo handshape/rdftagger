@@ -1,11 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.jfoenix.controls.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.web.WebView?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="rootContainer" prefHeight="400.0" prefWidth="640.0"
-      xmlns="http://javafx.com/javafx/8.0.212"
-      fx:controller="ca.gc.justice.rdftagger.ui.RdfTaggingUIController">
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXToolbar?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+
+<VBox fx:id="rootContainer" prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ca.gc.justice.rdftagger.ui.RdfTaggingUIController">
+   <children>
+      <JFXToolbar>
+         <center>
+            <HBox spacing="5.0" BorderPane.alignment="CENTER">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <children>
+                  <JFXButton text="Load Subjects..." />
+                  <JFXButton text="Load Predicates..." />
+                  <JFXButton text="Load Objects..." />
+               </children>
+            </HBox>
+         </center>
+         <right>
+            <JFXButton text="Save..." BorderPane.alignment="CENTER" />
+         </right>
+      </JFXToolbar>
+      <SplitPane dividerPositions="0.46238244514106586" prefHeight="160.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+        <items>
+            <VBox spacing="5.0">
+               <children>
+                  <Label text="Subject" />
+                  <ComboBox fx:id="subjectComboBox" onAction="#subjectComboBoxAction" prefWidth="400.0" />
+                  <VBox prefHeight="200.0" prefWidth="100.0" VBox.vgrow="ALWAYS" />
+                  <HBox VBox.vgrow="NEVER">
+                     <children>
+                        <JFXButton fx:id="previousButton" buttonType="RAISED" prefHeight="50.0" prefWidth="400.0" ripplerFill="#d3d3d3" style="-fx-background-color: lightred;" text="Previous" HBox.hgrow="ALWAYS" />
+                        <JFXButton fx:id="nextButton" buttonType="RAISED" prefHeight="50.0" prefWidth="400.0" ripplerFill="LIGHTGRAY" text="Next" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <ScrollPane fx:id="splitPane" prefHeight="200.0" prefWidth="200.0">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
+              </content>
+            </ScrollPane>
+        </items>
+      </SplitPane>
+   </children>
 </VBox>
