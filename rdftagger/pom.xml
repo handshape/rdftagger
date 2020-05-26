@@ -123,7 +123,6 @@
             <artifactId>apache-jena-libs</artifactId>
             <type>pom</type>
             <version>3.14.0</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.jfoenix</groupId>
@@ -185,16 +184,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-core</artifactId>
-            <version>3.14.0</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
             <type>jar</type>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-arq</artifactId>
-            <version>3.14.0</version>
-            <type>jar</type>
-        </dependency>
+        
     </dependencies>
 </project>

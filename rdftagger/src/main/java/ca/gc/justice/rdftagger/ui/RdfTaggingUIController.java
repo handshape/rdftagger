@@ -4,12 +4,16 @@ import ca.gc.justice.rdftagger.triplestore.JenaTripleStore;
 import ca.gc.justice.rdftagger.triplestore.RDFTriple;
 import ca.gc.justice.rdftagger.triplestore.RDFTripleException;
 import com.jfoenix.controls.JFXButton;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
@@ -23,6 +27,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -53,6 +63,8 @@ public class RdfTaggingUIController {
     @FXML
     private WebView webView;
 
+    private final FileChooser sourceDataFileChooser = new FileChooser();
+
     private final TreeMap<String, JFXButton> objectButtonMap = new TreeMap<>();
 
     private NavigableSet<String> predicateSet;
@@ -62,30 +74,100 @@ public class RdfTaggingUIController {
 
     @FXML
     void loadObjectsAction(ActionEvent event) {
-        loadObjectList(new TreeSet<String>(Arrays.asList(
-                "http://justice.gc.ca/ext/object/naics/12345",
-                "http://justice.gc.ca/ext/object/naics/54321",
-                "http://justice.gc.ca/ext/object/naics/31415"
-        )));
+        sourceDataFileChooser.setTitle("Open Objects File");
+        sourceDataFileChooser.getExtensionFilters().clear();
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Text file", "*.txt"));
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Comma-Separated Values", "*.csv"));
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Tab-Delimited Values", "*.tsv"));
+        List<File> filesToOpen = sourceDataFileChooser.showOpenMultipleDialog(findWindow());
+        if (filesToOpen != null) {
+            try {
+                //TODO: do we want a sanity check here?
+                loadObjectList(loadUrisFromFiles(filesToOpen));
+            } catch (IOException | URISyntaxException ex) {
+                // TODO: Pop a message to the user
+                Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @FXML
     void loadPredicatesAction(ActionEvent event) {
-        //TODO: Pop a file chooser and load the list of predicates.
-        loadPredicateList(new TreeSet<String>(Arrays.asList(
-                "http://justice.gc.ca/ext/relationship/applies-to",
-                "http://justice.gc.ca/ext/relationship/not-applies-to"
-        )));
+        sourceDataFileChooser.setTitle("Open Predicates File");
+        sourceDataFileChooser.getExtensionFilters().clear();
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Text file", "*.txt"));
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Comma-Separated Values", "*.csv"));
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Tab-Delimited Values", "*.tsv"));
+        List<File> filesToOpen = sourceDataFileChooser.showOpenMultipleDialog(findWindow());
+        if (filesToOpen != null) {
+            try {
+                //TODO: do we want a sanity check here?
+                loadObjectList(loadUrisFromFiles(filesToOpen));
+            } catch (IOException | URISyntaxException ex) {
+                // TODO: Pop a message to the user
+                Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
     }
 
     @FXML
     void loadSubjectsAction(ActionEvent event) {
-        //TODO: Pop a file chooser and load the list of subjects into the combobox.
-        loadSubjectList(new TreeSet<String>(Arrays.asList(
-                "https://laws-lois.justice.gc.ca/eng/regulations/SOR-86-304/",
-                "https://laws-lois.justice.gc.ca/eng/acts/A-1/",
-                "https://laws-lois.justice.gc.ca/eng/acts/C-46/"
-        )));
+        sourceDataFileChooser.setTitle("Open Subjects File");
+        sourceDataFileChooser.getExtensionFilters().clear();
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Text file", "*.txt"));
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Comma-Separated Values", "*.csv"));
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Tab-Delimited Values", "*.tsv"));
+        List<File> filesToOpen = sourceDataFileChooser.showOpenMultipleDialog(findWindow());
+        if (filesToOpen != null) {
+            try {
+                loadSubjectList(loadUrisFromFiles(filesToOpen));
+            } catch (IOException | URISyntaxException ex) {
+                // TODO: Pop a message to the user
+                Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private TreeSet<String> loadUrisFromFiles(List<File> filesToOpen) throws IOException, URISyntaxException {
+        TreeSet<String> toLoad = new TreeSet<>();
+        for (File file : filesToOpen) {
+            if (file.getName().endsWith(".csv")) {
+                try (CSVParser parser = CSVParser.parse(file, StandardCharsets.UTF_8, CSVFormat.DEFAULT)) {
+                    parseLinesAndAliasesFromCsv(parser, toLoad);
+                }
+            } else if (file.getName().endsWith(".tsv")) {
+                try (CSVParser parser = CSVParser.parse(file, StandardCharsets.UTF_8, CSVFormat.TDF)) {
+                    parseLinesAndAliasesFromCsv(parser, toLoad);
+                }
+            } else {
+                List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
+                for (String line : lines) {
+                    line = line.trim();
+                    if (!line.startsWith("#") && !line.isEmpty()) {
+                        URI uri = new URI(line);
+                        toLoad.add(uri.toASCIIString());
+                    }
+                }
+            }
+        }
+        return toLoad;
+    }
+
+    private void parseLinesAndAliasesFromCsv(final CSVParser parser, TreeSet<String> toLoad) throws URISyntaxException {
+        for (CSVRecord record : parser) {
+            String uriCell = record.get(0).trim();
+            if (!uriCell.startsWith("#") && !uriCell.isEmpty()) {
+                URI uri = new URI(uriCell);
+                toLoad.add(uri.toASCIIString());
+                if (record.size() > 1) {
+                    String alias = record.get(1).trim();
+                    if (!alias.isEmpty()) {
+                        Aliases.putAlias(uri, alias);
+                    }
+                }
+            }
+        }
     }
 
     @FXML
@@ -198,5 +280,9 @@ public class RdfTaggingUIController {
                 affectedButton.setStyle("-fx-background-color:" + StringColourizer.hexColorForString(predicate));
             }
         }
+    }
+
+    private Window findWindow() {
+        return this.rootContainer.getScene().getWindow();
     }
 }

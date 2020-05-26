@@ -24,7 +24,7 @@ public class SimpleTripleStoreTest {
         URI predicate = new URI("http://justice.gc.ca/ext/is");
         Object objekt = "Cool";
         RDFTriple triple = new RDFTriple(subject, predicate, objekt);
-        ITripleStore[] instances = new ITripleStore[]{new SimpleTripleStore(), new JenaTripleStore()};
+        ITripleStore[] instances = new ITripleStore[]{new SimpleTripleStore(), new TrieTripleStore(), new JenaTripleStore()};
         for (ITripleStore instance : instances) {
             System.out.println("Testing triple store: " + instance.getClass().getSimpleName());
             instance.put(triple);

@@ -1,6 +1,7 @@
 package ca.gc.justice.rdftagger.triplestore;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  *
@@ -19,6 +20,11 @@ public class RDFTriple {
         this.subject = subject;
         this.predicate = predicate;
         this.objekt = objekt;
+    }
+
+    public static RDFTriple parse(String in) throws URISyntaxException, RDFTripleException {
+        String[] parts = in.split("\t");
+        return new RDFTriple(new URI(parts[0]), new URI(parts[1]), parts[2]);
     }
 
     @Override
@@ -54,6 +60,17 @@ public class RDFTriple {
      */
     public Object getObjekt() {
         return objekt;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getSubject().toASCIIString());
+        sb.append("\t");
+        sb.append(getPredicate().toASCIIString());
+        sb.append("\t");
+        sb.append(String.valueOf(getObjekt()));
+        return sb.toString();
     }
 
 }

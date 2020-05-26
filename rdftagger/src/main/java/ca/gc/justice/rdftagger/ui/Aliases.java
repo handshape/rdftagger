@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -18,15 +19,15 @@ import org.apache.commons.csv.CSVRecord;
  *
  * @author jturner
  */
-public class Aliases {
 
-    private static HashMap<URI, String> aliasStore = null;
+public class Aliases {
+private static PatriciaTrie<String> aliasStore = null;
 
     public static String getAlias(URI uri) {
         if (aliasStore == null) {
             init();
         }
-        return aliasStore.getOrDefault(uri, uri.toASCIIString());
+        return aliasStore.getOrDefault(uri.toASCIIString(), uri.toASCIIString());
     }
 
     public static String getAlias(String subject) {
@@ -37,9 +38,16 @@ public class Aliases {
         }
     }
 
+    public static void putAlias(URI uri, String alias) {
+        if (aliasStore == null) {
+            init();
+        }
+        aliasStore.put(uri.toASCIIString(), alias);
+    }
+
     private static synchronized void init() {
         if (aliasStore == null) {
-            aliasStore = new HashMap<>();
+            aliasStore = new PatriciaTrie<>();
             try {
                 Path path = Paths.get("./aliases.csv");
                 if (Files.isRegularFile(path) && Files.isReadable(path)) {
@@ -49,7 +57,7 @@ public class Aliases {
                         try {
                             URI source = new URI(record.get(0));
                             String alias = record.get(1);
-                            aliasStore.put(source, alias);
+                            aliasStore.put(source.toASCIIString(), alias);
                         } catch (URISyntaxException ex) {
                             Logger.getLogger(Aliases.class.getName()).log(Level.SEVERE, "Failed to parse URI: " + record.get(0), ex);
                         }
