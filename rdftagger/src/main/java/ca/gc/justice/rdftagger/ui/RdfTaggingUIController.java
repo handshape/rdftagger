@@ -1,14 +1,22 @@
 package ca.gc.justice.rdftagger.ui;
 
+import ca.gc.justice.rdftagger.triplestore.JenaTripleStore;
+import ca.gc.justice.rdftagger.triplestore.RDFTriple;
+import ca.gc.justice.rdftagger.triplestore.RDFTripleException;
 import com.jfoenix.controls.JFXButton;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -45,9 +53,12 @@ public class RdfTaggingUIController {
     @FXML
     private WebView webView;
 
-    private NavigableSet<String> predicateSet;
     private final TreeMap<String, JFXButton> objectButtonMap = new TreeMap<>();
+
+    private NavigableSet<String> predicateSet;
     private Map<String, String> currentObjectPredicates = new HashMap<>();
+
+    private JenaTripleStore model = new JenaTripleStore();
 
     @FXML
     void loadObjectsAction(ActionEvent event) {
@@ -90,7 +101,7 @@ public class RdfTaggingUIController {
 
     @FXML
     void saveAction(ActionEvent event) {
-        //TODO: Pop a file save dialog and flush the triple store to disk.
+        model.save(Paths.get("./testsave.ttl"));
     }
 
     @FXML
@@ -101,15 +112,24 @@ public class RdfTaggingUIController {
     private void loadSubject(String subject) {
         webView.getEngine().load(subject);
         currentObjectPredicates.clear();
+        try {
+            Collection<RDFTriple> triples = model.get(new URI(subject), null, null);
+            triples.forEach((RDFTriple triple) -> {
+                currentObjectPredicates.put(String.valueOf(triple.getObjekt()), triple.getPredicate().toASCIIString());
+            });
+
+        } catch (URISyntaxException ex) {
+            //TODO: Pop something when an exception like this happens.
+            Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //TODO: load whatever the set of states in the triple store are for the subject.
         objectButtonMap.keySet().forEach(objectString -> {
-            updateButton(objectString, currentObjectPredicates.get(currentObjectPredicates));
+            updateButton(objectString, currentObjectPredicates.get(objectString));
         });
 
     }
 
     private void loadSubjectList(Set<String> subjects) {
-        TreeSet<String> subjectSet = new TreeSet<String>(subjects);
         subjectComboBox.getItems().clear();
         subjectComboBox.getItems().addAll(subjects);
         subjectComboBox.getSelectionModel().selectFirst();
@@ -150,6 +170,14 @@ public class RdfTaggingUIController {
     }
 
     private void setTriple(String subject, String predicate, String objectString) {
+        try {
+            model.removeAll(new URI(subject), null, objectString);
+            if (predicate != null) {
+                model.put(new RDFTriple(new URI(subject), new URI(predicate), objectString));
+            }
+        } catch (URISyntaxException | RDFTripleException ex) {
+            Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //TODO: Clear matching subject/object declarations in the store, and put the new triple in the triple store. 
         if (subject.equals(subjectComboBox.getSelectionModel().getSelectedItem())) {
             // The change affects the displayed buttons.
@@ -163,11 +191,11 @@ public class RdfTaggingUIController {
         currentObjectPredicates.put(objectString, predicate);
         if (affectedButton != null) {
             if (predicate == null || predicate.equals(NULL_PREDICATE)) {
-                affectedButton.setText(objectString);
+                affectedButton.setText(Aliases.getAlias(objectString));
                 affectedButton.setStyle("");
             } else {
-                affectedButton.setText(predicate + "\n" + objectString);
-                affectedButton.setStyle("-fx-background-color:#dedede");
+                affectedButton.setText(Aliases.getAlias(predicate) + "\n" + Aliases.getAlias(objectString));
+                affectedButton.setStyle("-fx-background-color:" + StringColourizer.hexColorForString(predicate));
             }
         }
     }

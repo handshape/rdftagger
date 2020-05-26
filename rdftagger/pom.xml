@@ -119,9 +119,16 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>apache-jena-libs</artifactId>
+            <type>pom</type>
+            <version>3.14.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.jfoenix</groupId>
             <artifactId>jfoenix</artifactId>
-            <version>9.0.9</version>
+            <version>8.0.9</version>
         </dependency>
         <dependency>
             <groupId>eu.hansolo</groupId>
@@ -177,6 +184,17 @@
             <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-core</artifactId>
+            <version>3.14.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-arq</artifactId>
+            <version>3.14.0</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 </project>
