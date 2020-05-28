@@ -4,6 +4,8 @@ import ca.gc.justice.rdftagger.triplestore.JenaTripleStore;
 import ca.gc.justice.rdftagger.triplestore.RDFTriple;
 import ca.gc.justice.rdftagger.triplestore.RDFTripleException;
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXSnackbar;
+import com.jfoenix.controls.JFXSnackbarLayout;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -21,11 +23,18 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -63,7 +72,10 @@ public class RdfTaggingUIController {
     @FXML
     private WebView webView;
 
+    private JFXSnackbar snackBar = null;
+
     private final FileChooser sourceDataFileChooser = new FileChooser();
+    private final FileChooser outputFileChooser = new FileChooser();
 
     private final TreeMap<String, JFXButton> objectButtonMap = new TreeMap<>();
 
@@ -71,6 +83,12 @@ public class RdfTaggingUIController {
     private Map<String, String> currentObjectPredicates = new HashMap<>();
 
     private JenaTripleStore model = new JenaTripleStore();
+
+    @FXML
+    void initialize() {
+        // Set up the snackBar
+        snackBar = new JFXSnackbar(rootContainer);
+    }
 
     @FXML
     void loadObjectsAction(ActionEvent event) {
@@ -83,10 +101,11 @@ public class RdfTaggingUIController {
         if (filesToOpen != null) {
             try {
                 //TODO: do we want a sanity check here?
-                loadObjectList(loadUrisFromFiles(filesToOpen));
+                TreeSet<String> loadedUris = loadUrisFromFiles(filesToOpen);
+                loadObjectList(loadedUris);
+                popSnackBar("Loaded " + loadedUris.size() + " objects.");
             } catch (IOException | URISyntaxException ex) {
-                // TODO: Pop a message to the user
-                Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+                handleException(ex);
             }
         }
     }
@@ -102,10 +121,11 @@ public class RdfTaggingUIController {
         if (filesToOpen != null) {
             try {
                 //TODO: do we want a sanity check here?
-                loadObjectList(loadUrisFromFiles(filesToOpen));
+                TreeSet<String> loadedUris = loadUrisFromFiles(filesToOpen);
+                loadPredicateList(loadedUris);
+                popSnackBar("Loaded " + loadedUris.size() + " predicates.");
             } catch (IOException | URISyntaxException ex) {
-                // TODO: Pop a message to the user
-                Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+                handleException(ex);
             }
         }
 
@@ -123,8 +143,7 @@ public class RdfTaggingUIController {
             try {
                 loadSubjectList(loadUrisFromFiles(filesToOpen));
             } catch (IOException | URISyntaxException ex) {
-                // TODO: Pop a message to the user
-                Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+                handleException(ex);
             }
         }
     }
@@ -183,7 +202,14 @@ public class RdfTaggingUIController {
 
     @FXML
     void saveAction(ActionEvent event) {
-        model.save(Paths.get("./testsave.ttl"));
+        outputFileChooser.setTitle("Save Triples File");
+        outputFileChooser.getExtensionFilters().clear();
+        outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Turtle RDF", "*.ttl"));
+        File saveFile = sourceDataFileChooser.showSaveDialog(findWindow());
+        if (saveFile != null) {
+            model.save(saveFile.toPath());
+            popSnackBar("Saved to " + saveFile.getName());
+        }
     }
 
     @FXML
@@ -201,14 +227,11 @@ public class RdfTaggingUIController {
             });
 
         } catch (URISyntaxException ex) {
-            //TODO: Pop something when an exception like this happens.
-            Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+            handleException(ex);
         }
-        //TODO: load whatever the set of states in the triple store are for the subject.
         objectButtonMap.keySet().forEach(objectString -> {
             updateButton(objectString, currentObjectPredicates.get(objectString));
         });
-
     }
 
     private void loadSubjectList(Set<String> subjects) {
@@ -260,7 +283,6 @@ public class RdfTaggingUIController {
         } catch (URISyntaxException | RDFTripleException ex) {
             Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        //TODO: Clear matching subject/object declarations in the store, and put the new triple in the triple store. 
         if (subject.equals(subjectComboBox.getSelectionModel().getSelectedItem())) {
             // The change affects the displayed buttons.
             currentObjectPredicates.put(objectString, predicate);
@@ -284,5 +306,34 @@ public class RdfTaggingUIController {
 
     private Window findWindow() {
         return this.rootContainer.getScene().getWindow();
+    }
+
+    private void handleException(Throwable ex) {
+        Logger.getLogger(RdfTaggingUIController.class.getName()).log(Level.SEVERE, null, ex);
+        alert(ex.getClass().getName(), ex.getMessage());
+    }
+
+    private void alert(String title, String message) {
+        if (Platform.isFxApplicationThread()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText(title);
+            alert.setHeaderText(message);
+            alert.showAndWait();
+        } else {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setContentText(title);
+                alert.setHeaderText(message);
+                alert.showAndWait();
+            });
+        }
+    }
+
+    public void popSnackBar(final String message) {
+        Platform.runLater(() -> {
+            JFXSnackbarLayout snackbarLayout = new JFXSnackbarLayout(message);
+            snackbarLayout.setBackground(new Background(new BackgroundFill(new Color(0.8D, 0.8D, 0.8D, 0.5D), new CornerRadii(5D), Insets.EMPTY)));
+            snackBar.enqueue(new JFXSnackbar.SnackbarEvent(snackbarLayout));
+        });
     }
 }

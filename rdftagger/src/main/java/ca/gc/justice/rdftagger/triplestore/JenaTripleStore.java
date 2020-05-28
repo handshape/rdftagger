@@ -116,14 +116,12 @@ public class JenaTripleStore implements ITripleStore {
     public void save(Path path) {
         try (OutputStream out = Files.newOutputStream(path.toAbsolutePath(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             model.write(out, "TTL");
-            model.write(System.out, "TTL");
             out.flush();
             //TODO: notify the user of success...
         } catch (IOException ex) {
             Logger.getLogger(JenaTripleStore.class.getName()).log(Level.SEVERE, null, ex);
             //TODO: notify the user.
         }
-        System.out.println(path.toAbsolutePath().toString());
     }
 
 }
