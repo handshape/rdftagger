@@ -1,4 +1,4 @@
-package ca.gc.justice.rdftagger.ui;
+package ca.gc.csps.rdftagger.ui;
 
 import java.nio.charset.StandardCharsets;
 

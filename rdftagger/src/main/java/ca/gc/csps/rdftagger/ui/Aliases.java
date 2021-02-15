@@ -1,4 +1,4 @@
-package ca.gc.justice.rdftagger.ui;
+package ca.gc.csps.rdftagger.ui;
 
 import java.io.IOException;
 import java.net.URI;

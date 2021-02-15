@@ -1,4 +1,4 @@
-package ca.gc.justice.rdftagger.triplestore;
+package ca.gc.csps.rdftagger.triplestore;
 
 import java.io.IOException;
 import java.io.OutputStream;

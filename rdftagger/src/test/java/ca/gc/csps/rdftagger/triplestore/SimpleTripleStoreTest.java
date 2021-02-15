@@ -1,5 +1,11 @@
-package ca.gc.justice.rdftagger.triplestore;
+package ca.gc.csps.rdftagger.triplestore;
 
+import ca.gc.csps.rdftagger.triplestore.JenaTripleStore;
+import ca.gc.csps.rdftagger.triplestore.TrieTripleStore;
+import ca.gc.csps.rdftagger.triplestore.ITripleStore;
+import ca.gc.csps.rdftagger.triplestore.RDFTripleException;
+import ca.gc.csps.rdftagger.triplestore.RDFTriple;
+import ca.gc.csps.rdftagger.triplestore.SimpleTripleStore;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
@@ -20,8 +26,8 @@ public class SimpleTripleStoreTest {
     @Test
     public void testIntegration() throws URISyntaxException, RDFTripleException {
         System.out.println("Integration test - triple stores");
-        URI subject = new URI("http://justice.gc.ca/");
-        URI predicate = new URI("http://justice.gc.ca/ext/is");
+        URI subject = new URI("http://csps.gc.ca/");
+        URI predicate = new URI("http://csps.gc.ca/ext/is");
         Object objekt = "Cool";
         RDFTriple triple = new RDFTriple(subject, predicate, objekt);
         ITripleStore[] instances = new ITripleStore[]{new SimpleTripleStore(), new TrieTripleStore(), new JenaTripleStore()};

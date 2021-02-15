@@ -1,8 +1,8 @@
-package ca.gc.justice.rdftagger.ui;
+package ca.gc.csps.rdftagger.ui;
 
-import ca.gc.justice.rdftagger.triplestore.JenaTripleStore;
-import ca.gc.justice.rdftagger.triplestore.RDFTriple;
-import ca.gc.justice.rdftagger.triplestore.RDFTripleException;
+import ca.gc.csps.rdftagger.triplestore.JenaTripleStore;
+import ca.gc.csps.rdftagger.triplestore.RDFTriple;
+import ca.gc.csps.rdftagger.triplestore.RDFTripleException;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXSnackbar;
 import com.jfoenix.controls.JFXSnackbarLayout;
@@ -35,6 +35,7 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -48,8 +49,6 @@ import org.apache.commons.io.FileUtils;
  * @author jturner
  */
 public class RdfTaggingUIController {
-
-    private static String NULL_PREDICATE = "http://justice.gc.ca/ext/predicate/0-null";
 
     @FXML
     private VBox rootContainer;
@@ -99,14 +98,18 @@ public class RdfTaggingUIController {
         sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Tab-Delimited Values", "*.tsv"));
         List<File> filesToOpen = sourceDataFileChooser.showOpenMultipleDialog(findWindow());
         if (filesToOpen != null) {
-            try {
-                //TODO: do we want a sanity check here?
-                TreeSet<String> loadedUris = loadUrisFromFiles(filesToOpen);
-                loadObjectList(loadedUris);
-                popSnackBar("Loaded " + loadedUris.size() + " objects.");
-            } catch (IOException | URISyntaxException ex) {
-                handleException(ex);
-            }
+            loadObjectsFile(filesToOpen);
+        }
+    }
+
+    public void loadObjectsFile(List<File> filesToOpen) {
+        try {
+            //TODO: do we want a sanity check here?
+            TreeSet<String> loadedUris = loadUrisFromFiles(filesToOpen);
+            loadObjectList(loadedUris);
+            popSnackBar("Loaded " + loadedUris.size() + " objects.");
+        } catch (IOException | URISyntaxException ex) {
+            handleException(ex);
         }
     }
 
@@ -119,32 +122,41 @@ public class RdfTaggingUIController {
         sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Tab-Delimited Values", "*.tsv"));
         List<File> filesToOpen = sourceDataFileChooser.showOpenMultipleDialog(findWindow());
         if (filesToOpen != null) {
-            try {
-                //TODO: do we want a sanity check here?
-                TreeSet<String> loadedUris = loadUrisFromFiles(filesToOpen);
-                loadPredicateList(loadedUris);
-                popSnackBar("Loaded " + loadedUris.size() + " predicates.");
-            } catch (IOException | URISyntaxException ex) {
-                handleException(ex);
-            }
+            loadPredicatesFile(filesToOpen);
         }
 
+    }
+
+    public void loadPredicatesFile(List<File> filesToOpen) {
+        try {
+            //TODO: do we want a sanity check here?
+            TreeSet<String> loadedUris = loadUrisFromFiles(filesToOpen);
+            loadPredicateList(loadedUris);
+            popSnackBar("Loaded " + loadedUris.size() + " predicates.");
+        } catch (IOException | URISyntaxException ex) {
+            handleException(ex);
+        }
     }
 
     @FXML
     void loadSubjectsAction(ActionEvent event) {
         sourceDataFileChooser.setTitle("Open Subjects File");
         sourceDataFileChooser.getExtensionFilters().clear();
+        sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("URI and alias files", "*.txt,*.csv*,.tsv"));
         sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Text file", "*.txt"));
         sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Comma-Separated Values", "*.csv"));
         sourceDataFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UTF-8 Tab-Delimited Values", "*.tsv"));
         List<File> filesToOpen = sourceDataFileChooser.showOpenMultipleDialog(findWindow());
         if (filesToOpen != null) {
-            try {
-                loadSubjectList(loadUrisFromFiles(filesToOpen));
-            } catch (IOException | URISyntaxException ex) {
-                handleException(ex);
-            }
+            loadSubjectsFile(filesToOpen);
+        }
+    }
+
+    public void loadSubjectsFile(List<File> filesToOpen) {
+        try {
+            loadSubjectList(loadUrisFromFiles(filesToOpen));
+        } catch (IOException | URISyntaxException ex) {
+            handleException(ex);
         }
     }
 
@@ -152,7 +164,7 @@ public class RdfTaggingUIController {
         TreeSet<String> toLoad = new TreeSet<>();
         for (File file : filesToOpen) {
             if (file.getName().endsWith(".csv")) {
-                try (CSVParser parser = CSVParser.parse(file, StandardCharsets.UTF_8, CSVFormat.DEFAULT)) {
+                try (CSVParser parser = CSVParser.parse(file, StandardCharsets.UTF_8, CSVFormat.EXCEL)) {
                     parseLinesAndAliasesFromCsv(parser, toLoad);
                 }
             } else if (file.getName().endsWith(".tsv")) {
@@ -175,18 +187,26 @@ public class RdfTaggingUIController {
 
     private void parseLinesAndAliasesFromCsv(final CSVParser parser, TreeSet<String> toLoad) throws URISyntaxException {
         for (CSVRecord record : parser) {
-            String uriCell = record.get(0).trim();
+            String uriCell = trimAndDequote(record.get(0));
             if (!uriCell.startsWith("#") && !uriCell.isEmpty()) {
                 URI uri = new URI(uriCell);
                 toLoad.add(uri.toASCIIString());
                 if (record.size() > 1) {
-                    String alias = record.get(1).trim();
+                    String alias = trimAndDequote(record.get(1));
                     if (!alias.isEmpty()) {
                         Aliases.putAlias(uri, alias);
                     }
                 }
             }
         }
+    }
+
+    private String trimAndDequote(String uriCell) {
+        uriCell = uriCell.trim();
+        if (uriCell.charAt(0) == '\"' && uriCell.charAt(uriCell.length() - 1) == '\"') {
+            uriCell = uriCell.substring(1, uriCell.length() - 2);
+        }
+        return uriCell;
     }
 
     @FXML
@@ -243,7 +263,6 @@ public class RdfTaggingUIController {
 
     private void loadPredicateList(Set<String> predicates) {
         TreeSet<String> predicateSet = new TreeSet<String>(predicates);
-        predicateSet.add(NULL_PREDICATE);
         this.predicateSet = predicateSet;
     }
 
@@ -252,9 +271,12 @@ public class RdfTaggingUIController {
         this.objectButtonMap.clear();
         objectButtonContainer.getChildren().clear();
         objectSet.stream().forEach(objectString -> {
-            JFXButton objectButton = new JFXButton(objectString);
-            objectButton.setPrefHeight(50);
-            objectButton.setMinWidth(300);
+            JFXButton objectButton = new JFXButton(Aliases.getAlias(objectString));
+            objectButton.setMinHeight(50);
+            objectButton.setMinWidth(100);
+            objectButton.setPrefWidth(1000);
+            objectButton.setTextAlignment(TextAlignment.LEFT);
+            objectButton.setWrapText(true);
             objectButton.setButtonType(JFXButton.ButtonType.RAISED);
             objectButtonContainer.getChildren().add(objectButton);
             objectButtonMap.put(objectString, objectButton);
@@ -268,9 +290,10 @@ public class RdfTaggingUIController {
         String newPredicate = null;
         String oldPredicate = currentObjectPredicates.get(objectString);
         if (oldPredicate == null) {
-            oldPredicate = NULL_PREDICATE;
+            newPredicate = predicateSet.first();
+        } else {
+            newPredicate = predicateSet.higher(oldPredicate);
         }
-        newPredicate = predicateSet.higher(oldPredicate);
         setTriple(subjectComboBox.getSelectionModel().getSelectedItem(), newPredicate, objectString);
     }
 
@@ -294,7 +317,7 @@ public class RdfTaggingUIController {
         JFXButton affectedButton = this.objectButtonMap.get(objectString);
         currentObjectPredicates.put(objectString, predicate);
         if (affectedButton != null) {
-            if (predicate == null || predicate.equals(NULL_PREDICATE)) {
+            if (predicate == null) {
                 affectedButton.setText(Aliases.getAlias(objectString));
                 affectedButton.setStyle("");
             } else {

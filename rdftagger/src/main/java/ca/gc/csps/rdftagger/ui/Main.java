@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ca.gc.justice.rdftagger.ui;
+package ca.gc.csps.rdftagger.ui;
 
 /**
  *
