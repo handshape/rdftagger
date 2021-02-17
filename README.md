@@ -10,4 +10,4 @@ https://www.azul.com/downloads/zulu-community/
 cd rdftagger
 mvn clean install
 ```
-Authors: Joshuar Turner and Dimitri Treheles 
+Authors: Joshua Turner and Dimitri Treheles 
