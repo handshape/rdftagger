@@ -1,15 +1,9 @@
 package ca.gc.csps.rdftagger.triplestore;
 
-import ca.gc.csps.rdftagger.triplestore.JenaTripleStore;
-import ca.gc.csps.rdftagger.triplestore.TrieTripleStore;
-import ca.gc.csps.rdftagger.triplestore.ITripleStore;
-import ca.gc.csps.rdftagger.triplestore.RDFTripleException;
-import ca.gc.csps.rdftagger.triplestore.RDFTriple;
-import ca.gc.csps.rdftagger.triplestore.SimpleTripleStore;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -34,16 +28,16 @@ public class SimpleTripleStoreTest {
         for (ITripleStore instance : instances) {
             System.out.println("Testing triple store: " + instance.getClass().getSimpleName());
             instance.put(triple);
-            assertTrue("RDF that goes in also comes out.", instance.get(subject, predicate, objekt).contains(triple));
-            assertTrue("Partial selectors match.", instance.get(subject, null, null).contains(triple));
-            assertTrue("Partial selectors match.", instance.get(null, predicate, null).contains(triple));
-            assertTrue("Partial selectors match.", instance.get(null, null, objekt).contains(triple));
-            assertTrue("Empty selectors match.", instance.get(null, null, null).contains(triple));
-            assertFalse("Wrong selectors fail.", instance.get(new URI("http://canada.ca"), null, null).contains(triple));
-            assertFalse("Wrong selectors fail.", instance.get(null, new URI("http://canada.ca"), null).contains(triple));
-            assertFalse("Wrong selectors fail.", instance.get(null, null, new URI("http://canada.ca")).contains(triple));
+            assertTrue(instance.get(subject, predicate, objekt).contains(triple), "RDF that goes in also comes out.");
+            assertTrue(instance.get(subject, null, null).contains(triple), "Partial selectors match.");
+            assertTrue(instance.get(null, predicate, null).contains(triple), "Partial selectors match.");
+            assertTrue(instance.get(null, null, objekt).contains(triple), "Partial selectors match.");
+            assertTrue(instance.get(null, null, null).contains(triple), "Empty selectors match.");
+            assertFalse(instance.get(new URI("http://canada.ca"), null, null).contains(triple), "Wrong selectors fail.");
+            assertFalse(instance.get(null, new URI("http://canada.ca"), null).contains(triple), "Wrong selectors fail.");
+            assertFalse(instance.get(null, null, new URI("http://canada.ca")).contains(triple), "Wrong selectors fail.");
             instance.removeAll(subject, predicate, objekt);
-            assertFalse("Ensure that what's removed is gone.", instance.get(subject, predicate, objekt).contains(triple));
+            assertFalse(instance.get(subject, predicate, objekt).contains(triple), "Ensure that what's removed is gone.");
         }
     }
 

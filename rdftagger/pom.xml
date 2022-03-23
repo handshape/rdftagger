@@ -56,11 +56,6 @@
                             </transformers>
                             <artifactSet>
                                 <excludes>
-                                    <!-- The following line needs to be revoved when moving to a JVM that 
-                                         doesn't roll in JavaFX. The JFoenix version will need to bump to 9 or 
-                                         higher, and the openjfx imports will have to jive with the VM version.
-                                    -->
-                                    <exclude>*openjfx*</exclude>
                                 </excludes>
                             </artifactSet>
                         </configuration>
@@ -139,31 +134,26 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
             <version>17.0.2</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>17.0.2</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>17.0.2</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-base</artifactId>
             <version>17.0.2</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>17.0.2</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
