@@ -40,16 +40,13 @@ public class RdfTaggingUI extends Application {
         Platform.runLater(() -> {
             Parameters cliParms = this.getParameters();
             if (!cliParms.getUnnamed().isEmpty()) {
-                if (cliParms.getUnnamed().size() > 0) {
-                    controller.loadSubjectsFile(Arrays.asList(new File[]{new File(cliParms.getUnnamed().get(0))}));
-                }
+                controller.loadSubjectsFile(Arrays.asList(new File[]{new File(cliParms.getUnnamed().get(0))}));
                 if (cliParms.getUnnamed().size() > 1) {
                     controller.loadPredicatesFile(Arrays.asList(new File[]{new File(cliParms.getUnnamed().get(1))}));
                 }
                 if (cliParms.getUnnamed().size() > 2) {
                     controller.loadObjectsFile(Arrays.asList(new File[]{new File(cliParms.getUnnamed().get(2))}));
                 }
-
             }
         });
     }
