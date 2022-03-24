@@ -31,7 +31,7 @@ public class RdfTaggingUI extends Application {
         FXMLLoader loader = new FXMLLoader();
         Parent root = loader.load(getClass().getResourceAsStream("RdfTaggingUI.fxml"));
         Scene scene = new Scene(root);
-        primaryStage.setTitle("Dimitri's RDF Tagger");
+        primaryStage.setTitle("RDF Tagger");
         primaryStage.getIcons().clear();
         primaryStage.getIcons().add(new Image(getClass().getResource("triple.png").toExternalForm()));
         primaryStage.setScene(scene);
